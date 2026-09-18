@@ -1,0 +1,73 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 320px; margin: 0; font: 13px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #18191c; }
+  header { padding: 12px; background: #00aeec; color: #fff; font-weight: 600; }
+  .sec { padding: 10px 12px; border-bottom: 1px solid #f1f2f3; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+  .muted { color: #9499a0; font-size: 12px; }
+  .pill { padding: 1px 8px; border-radius: 10px; font-size: 11px; background: #f1f2f3; }
+  .pill.ok { background: #eaf9ee; color: #1f7a3d; }
+  .pill.warn { background: #ffecec; color: #c62828; }
+  a { color: #00aeec; text-decoration: none; }
+  button { width: 100%; height: 30px; margin-top: 6px; border: 1px solid #e3e5e7; background: #fff; border-radius: 6px; cursor: pointer; }
+  input[type=checkbox] { width: 16px; height: 16px; }
+  /* 速率额度说明 */
+  .quota-box { background: #f6f7f8; border-radius: 6px; padding: 8px 10px; margin-top: 4px; }
+  .quota-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .quota-bar { height: 5px; background: #e3e5e7; border-radius: 3px; margin: 6px 0 5px; overflow: hidden; }
+  .quota-fill { height: 100%; background: #00aeec; border-radius: 3px; transition: width .3s; }
+  .quota-note { font-size: 11px; color: #61666d; line-height: 1.5; }
+  .free-tag { display:inline-block; background:#eaf9ee; color:#1f7a3d; border-radius:3px; padding:0 4px; font-size:10px; margin-right:4px; }
+</style>
+</head>
+<body>
+  <header>B站评论防和谐</header>
+
+  <div class="sec">
+    <div class="row"><span>登录状态</span><span class="pill" id="login">检测中…</span></div>
+
+    <div class="quota-box">
+      <div class="quota-top">
+        <span>请求额度</span>
+        <span id="quotaNum" class="muted">—</span>
+      </div>
+      <div class="quota-bar"><div class="quota-fill" id="quotaFill" style="width:0%"></div></div>
+      <div class="quota-note" id="quotaNote">
+        <span class="free-tag">免费</span>用完会自动恢复，无总量上限。
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:6px"><span>排队中</span><span class="pill" id="queue">-</span></div>
+    <div class="row"><span>风控保护</span><span class="pill" id="breaker">-</span></div>
+  </div>
+
+  <div class="sec">
+    <div class="row"><label for="vis">可见性检测</label><input type="checkbox" id="vis"></div>
+    <div class="row"><label for="img">图片风险检测</label><input type="checkbox" id="img"></div>
+    <div class="row"><label for="verify">官方判定核验</label><input type="checkbox" id="verify"></div>
+    <div class="row"><label for="harm">和谐处理</label><input type="checkbox" id="harm"></div>
+    <div class="muted" id="harmHint">图片仅在本机分析，不会上传。</div>
+  </div>
+
+  <div class="sec" id="err" style="display:none;background:#ffecec;color:#c62828;font-size:12px"></div>
+
+  <div class="sec">
+    <button id="opts">打开设置与法律声明</button>
+  </div>
+
+  <div class="sec muted">
+    插件作者 <a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">@依然匹萨吧</a><br>
+    非官方工具，与哔哩哔哩无隶属关系。检测结果仅供参考。
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
+
+

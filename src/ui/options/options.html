@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>B站评论防和谐 · 设置与法律声明</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 860px; margin: 0 auto; padding: 24px 20px 60px;
+         font: 14px/1.8 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #18191c; }
+  h1 { font-size: 22px; } h2 { font-size: 17px; margin-top: 28px; border-left: 4px solid #00aeec; padding-left: 8px; }
+  .card { border: 1px solid #e3e5e7; border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; }
+  .row:last-child { border-bottom: none; }
+  .muted { color: #61666d; font-size: 13px; }
+  select { height: 30px; border: 1px solid #e3e5e7; border-radius: 6px; padding: 0 6px; font: inherit; background: #fff; color: inherit; }
+  textarea { width: 100%; min-height: 90px; border: 1px solid #e3e5e7; border-radius: 6px; padding: 8px; font: inherit; }
+  a { color: #00aeec; }
+  code { background: #f1f2f3; padding: 1px 5px; border-radius: 4px; }
+  ol li, ul li { margin: 4px 0; }
+  .warn { background: #fff5e6; border-color: #ffd699; }
+  button { height: 32px; padding: 0 16px; border: 1px solid #00aeec; background: #00aeec; color: #fff; border-radius: 6px; cursor: pointer; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #17181a; color: #e3e5e7; }
+    .card { border-color: #2f3238; } code { background: #26292e; }
+    textarea { background: #1c1f23; color: #e3e5e7; border-color: #2f3238; }
+    .warn { background: #33280f; border-color: #6b5320; }
+  }
+</style>
+</head>
+<body>
+<h1>B站评论防和谐 · 设置</h1>
+<p class="muted">
+  插件作者：<a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">@依然匹萨吧</a>
+  （https://space.bilibili.com/6297797）
+</p>
+
+<div class="card">
+  <div class="row"><span>发布前敏感词/不友善检测</span><span class="muted">始终开启（纯本地）</span></div>
+  <div class="row"><label for="vis">已发评论「他人是否可见」检测</label><input type="checkbox" id="vis"></div>
+  <div class="row"><label for="img">图片风险本地分析</label><input type="checkbox" id="img"></div>
+</div>
+
+<h2>官方判定核验（零写入）</h2>
+<div class="card">
+  <p><b>这是什么</b></p>
+  <p>B站<b>不存在</b>任何可读取审核规则的公开接口，阿瓦隆词库保密、且随评论区/账号等级/隐藏分动态变化。
+     因此「发送前预判」在技术上<b>不可能</b>是官方结果——上方的本地检测只是启发式推测。</p>
+  <p>真正的官方判定只在你自己发送之后才存在。本功能<b>不会代你发送、也不会制造任何测试评论</b>，
+     只做两件纯读取的事：</p>
+  <ol>
+    <li><b>旁路读取官方响应</b>：你点击B站自己的发送按钮后，扩展读取该请求的官方返回码
+        （如 <code>12016 评论内容包含敏感信息</code>）与评论 ID。<b>评论数量增量为 0。</b></li>
+    <li><b>只读比对可见性</b>：数秒后用公开的评论读接口，比对登录态与游客态，
+        判断这条评论是否被 ShadowBan（仅自己可见）或已被删除。</li>
+  </ol>
+  <p><b>能拿到的官方信号：</b></p>
+  <ul>
+    <li><code>code=12016</code> —— 官方在发送阶段直接拒绝，命中顶级词库，<b>全站通用，可信度最高</b></li>
+    <li><code>code=12015 / 12051 / 12035</code> —— 需验证码 / 查重 / 被UP主拉黑</li>
+    <li>ShadowBan —— 登录可见、游客不可见，客观事实比对</li>
+    <li>系统秒删 —— 发出后评论消失</li>
+  </ul>
+  <p><b>⚠ 局限：</b></p>
+  <ul>
+    <li>判定只能在<b>你发送之后</b>得到，无法在发送前给出官方结论。</li>
+    <li>审核存在<b>「秋后算账」</b>：评论初始正常、一段时间后被隐藏或删除。即时结果无法预测此情形，
+        建议过一段时间用评论旁的可见性徽标复查。</li>
+    <li>核验需要访问公开评论接口，已纳入统一限流队列。</li>
+  </ul>
+  <div class="row"><label for="verify">启用官方判定核验</label><input type="checkbox" id="verify"></div>
+  <div class="row">
+    <label for="verifyWait">发送后等待裁决时长</label>
+    <select id="verifyWait">
+      <option value="5000">5 秒（快，可能漏判）</option>
+      <option value="8000">8 秒（推荐）</option>
+      <option value="15000">15 秒</option>
+      <option value="30000">30 秒（最准，慢）</option>
+    </select>
+  </div>
+  <p class="muted">本功能<b>没有任何写操作</b>：不发送、不删除、不重放任何评论，因此也<b>不需要</b> cookies 权限。</p>
+</div>
+
+<h2>和谐处理</h2>
+<div class="card warn">
+  <p><b>⚠ 请先阅读风险提示</b></p>
+  <p>「和谐处理」会把命中的文字改写为同音字或插入零宽隐藏字符，以降低被自动规则识别的概率。请务必理解：</p>
+  <ul>
+    <li>它<b>不会让违规内容变得合规</b>。平台仍可通过语义模型、图像识别与人工审核判定违规。</li>
+    <li><b>「刻意规避审核」本身在多数平台规则下即构成违规</b>，一旦被认定，可能面临比原内容更重的处罚（禁言、封号等）。</li>
+    <li>本功能<b>仅建议用于</b>你确信属于正常表达、却被自动规则误判的情况；<b>严禁</b>用于发布真正的辱骂、人身攻击、违法或有害信息。</li>
+    <li>使用本功能产生的一切后果由你自行承担，详见下方法律声明第 11、12 条。</li>
+  </ul>
+  <div class="row">
+    <label for="harmAck"><b>我已阅读并理解上述风险</b></label>
+    <input type="checkbox" id="harmAck">
+  </div>
+  <div class="row"><label for="harm">在检测面板中显示和谐处理功能</label><input type="checkbox" id="harm"></div>
+  <div class="row">
+    <label for="harmMode">默认处理方式</label>
+    <select id="harmMode">
+      <option value="homophone">同音字替换（你好 → 泥豪）</option>
+      <option value="zerowidth">零宽字符插入（视觉不变）</option>
+      <option value="mixed">混合（优先同音字）</option>
+    </select>
+  </div>
+  <div class="row">
+    <label for="harmLevels">处理范围</label>
+    <select id="harmLevels">
+      <option value="high">仅高风险命中</option>
+      <option value="high,mid">高风险 + 中风险</option>
+      <option value="high,mid,low">全部命中</option>
+    </select>
+  </div>
+  <p class="muted">
+    同音字表由 <code>rules/homophones.json</code> 提供，可自行扩充；零宽字符会在预览中以
+    <code>␣</code> 标出，实际粘贴时不可见。
+  </p>
+</div>
+
+<h2>自定义白名单</h2>
+<div class="card">
+  <p class="muted">每行一个词。命中白名单的词不再报警（例如你的昵称、专有名词）。</p>
+  <textarea id="whitelist" placeholder="例如：&#10;蠢萌&#10;某个专有名词"></textarea>
+  <p><button id="save">保存设置</button> <span class="muted" id="saved"></span></p>
+</div>
+
+<h2>工作原理与请求频率</h2>
+<div class="card">
+  <ul>
+    <li><b>文本与图片的本地检测完全在你的浏览器内完成</b>，不上传任何评论内容、图片或个人信息到作者或第三方服务器；本扩展没有任何自建后端。</li>
+    <li><b>本地检测只是推测。</b>B站审核规则保密且无公开接口，发送前<b>不可能</b>得到官方结论；
+      面板上「本地推测」与「官方真实检测」两块结果已分区标注，请勿混淆。</li>
+    <li>「他人是否可见」需要对比<b>登录视角</b>与<b>游客视角</b>的评论列表，因此会访问哔哩哔哩公开的评论列表只读接口。</li>
+    <li><b>请求额度说明（不是付费额度）</b>：扩展在本地对请求做限速，弹窗里显示的「请求额度」是一个
+      <b>纯本地的节流计数器</b>——<b>永久免费、会自动恢复、没有总量上限</b>，可长期使用。
+      具体为：最多攒 5 次可立即使用的请求，之后<b>约每 5 秒自动恢复 1 次</b>。
+      这样做是为了把请求强度压到正常人工浏览水平以下，避免触发B站风控导致你的账号被限制。</li>
+    <li>其余保护：全局串行队列、随机抖动、指数退避重试、相同请求自动合并、结果缓存 10 分钟；
+      连续遇到风控响应会自动暂停 10 分钟（弹窗中的「风控保护」）。多标签页共用同一队列，不会叠加请求量。</li>
+    <li><b>可见性检测采用懒加载</b>：只有当你的评论滚动进视野时才会检测该条，不会为整页评论一次性排队。</li>
+    <li>默认情况下扩展<b>只读不写</b>：不会替你发布、删除、点赞任何内容，不做任何自动化批量操作。
+      <b>唯一的例外</b>是手动启用的「官方真实检测」，它会向<b>你自己配置的探针评论区</b>发送一条测试评论并随即删除；
+      你要评论的目标评论区全程零写入。</li>
+    <li>扩展<b>不使用</b>代理池、多账号轮换、验证码绕过等对抗风控的手段，也不共享任何用户的 Cookie 或身份凭证。每个安装实例只在本机使用你自己的登录会话。</li>
+  </ul>
+</div>
+
+<h2 id="legal">法律声明</h2>
+<div class="card warn">
+  <p><b>请在安装和使用前完整阅读。继续使用即视为您已理解并接受以下全部条款。</b></p>
+
+  <ol>
+    <li><b>非官方、无隶属关系。</b>本扩展为第三方个人开发的辅助工具，由
+      <a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">@依然匹萨吧</a> 开发，
+      与上海宽娱数码科技有限公司、上海幻电信息科技有限公司及「哔哩哔哩 / bilibili / B站」的任何关联主体
+      <b>均无隶属、代理、合作或授权关系</b>。「哔哩哔哩」「bilibili」及相关标识的商标权、著作权均归其权利人所有，
+      本扩展仅在描述兼容对象的必要范围内提及，构成合理使用（指示性使用），不主张任何权利。</li>
+
+    <li><b>检测结果不具权威性。</b>本扩展输出的风险等级、敏感词命中、修改建议、可见性判断，均来自
+      <b>本地启发式规则与公开接口的间接推断</b>，<b>并非</b>哔哩哔哩官方审核结论，不保证准确、完整或及时。
+      通过检测的内容仍可能被平台判定违规；被标红的内容也可能实际合规。请以平台官方审核与通知为准，
+      您对自己发布的一切内容独立承担全部责任。</li>
+
+    <li><b>关于「仅自己可见」的判定。</b>该功能通过比较登录态与游客态下公开评论列表的差异进行推断，
+      受分页深度、缓存、接口调整、网络状况等影响，可能出现误判或返回「无法确定」。该结果
+      <b>仅供参考，不可作为申诉、维权或指控他人的证据</b>。</li>
+
+    <li><b>遵守平台规则与法律法规。</b>使用者应自行遵守《哔哩哔哩用户使用协议》《哔哩哔哩社区公约》及相关平台规则，
+      并遵守《中华人民共和国网络安全法》《中华人民共和国数据安全法》《中华人民共和国个人信息保护法》
+      《网络信息内容生态治理规定》《互联网跟帖评论服务管理规定》等法律法规。
+      禁止将本扩展用于批量注册、刷量、大规模爬取平台数据、未经授权访问他人账号数据等任何违法违规用途。
+      若平台规则与本扩展功能冲突，应以平台规则为准并停止使用相应功能。</li>
+
+    <li><b>关于「和谐处理」功能的特别提示（重要）。</b>本扩展包含将文本改写为同音字或插入零宽隐藏字符的功能。
+      作者在此明确告知：
+      <ul>
+        <li>该功能的客观效果是<b>降低内容被平台自动规则识别的概率，属于对内容审核机制的规避</b>；</li>
+        <li>它<b>不会</b>使违规内容变为合规内容。平台仍可通过语义模型、人工审核等方式认定违规；</li>
+        <li><b>「刻意规避审核」在多数平台规则下本身即构成违规行为</b>，一经认定，可能导致比原内容更严厉的处罚，
+          包括但不限于评论限制、禁言、账号封禁；</li>
+        <li>若被规避的内容本身属于侮辱诽谤、侵犯他人权益、散布违法有害信息等，
+          <b>规避审核不能免除、反而可能加重使用者相应的行政责任或民事、刑事法律责任</b>；</li>
+        <li>该功能仅供使用者在<b>充分知悉上述风险</b>后，对自认为属正常表达却被自动规则误判的内容自行使用。
+          默认需在设置页勾选确认风险后方可启用。</li>
+      </ul>
+      <b>使用该功能所产生的一切后果，由使用者独立承担；作者不对任何账号处罚或法律责任负责。</b>
+      作者提供该功能不代表鼓励、教唆或认可任何规避审核的行为。</li>
+
+    <li><b>禁止的滥用情形。</b>无论是否使用和谐处理功能，均<b>严禁</b>借助本扩展发布：
+      侮辱、诽谤、人身攻击、地域或群体歧视内容；淫秽色情信息；涉及国家安全、恐怖主义、极端主义的违法信息；
+      侵犯他人隐私、肖像、名誉、知识产权的内容；虚假信息与网络诈骗信息。
+      本扩展的检测功能旨在帮助用户<b>避免</b>发布上述内容，而非帮助其绕过审查后发布。</li>
+
+    <li><b>数据与隐私。</b>本扩展不收集、不存储、不传输用户的个人信息、评论内容、Cookie 或浏览记录到任何外部服务器。
+      设置项与检测缓存仅保存在浏览器本地存储中，卸载扩展即清除。对哔哩哔哩接口的请求由您的浏览器直接发起，
+      使用您本机已有的登录状态，作者无法也不会接触到这些数据。详见随附的《隐私政策》。</li>
+
+    <li><b>接口使用与风险自担。</b>本扩展访问的是哔哩哔哩公开的只读 Web 接口，并已在技术上主动限制请求频率以尽量减少对平台的负担。
+      但平台可能随时调整接口、风控策略或服务条款，从而导致功能失效、账号被风控、限制或封禁。
+      <b>因使用本扩展而产生的任何直接或间接后果（包括但不限于账号受限、内容被删除、数据丢失），均由使用者自行承担。</b></li>
+
+    <li><b>免责与无担保。</b>本扩展按「现状」（AS IS）提供，不附带任何明示或默示的担保，
+      包括但不限于适销性、特定用途适用性及不侵权的担保。在法律允许的最大范围内，
+      作者不对任何因使用或无法使用本扩展而引起的损害承担责任。</li>
+
+    <li><b>词库说明。</b>内置规则为作者依据公开的社区规范与常识整理的<b>启发式示例词库</b>，
+      不是、也不可能是平台的真实审核词表；词库内容不代表作者的任何立场或价值判断。</li>
+
+    <li><b>开源与变更。</b>本扩展以个人非商业用途发布，不含任何广告、追踪或付费功能。
+      作者有权随时更新或终止本扩展，法律声明的变更将随版本更新发布。</li>
+
+    <li><b>投诉与联系。</b>若权利人认为本扩展存在侵权或不当之处，请通过作者主页
+      <a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">https://space.bilibili.com/6297797</a>
+      联系，作者将在核实后及时整改或下架。</li>
+  </ol>
+</div>
+
+<p class="muted">版本信息见扩展管理页。© 插件作者
+  <a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">@依然匹萨吧</a>。</p>
+
+<script src="options.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,20 @@
+
+
+{
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "name": "biliAntiShadowban",
+  "version": "1.5.0",
+  "type": "module",
+  "private": true,
+  "description": "B站评论防和谐 · 官方判定核验与可见性标识",
+  "author": "依然匹萨吧 (https://space.bilibili.com/6297797)",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs && node test-harmonize.mjs && node test-intercept.mjs && node test-bg.mjs && node test-lazy.mjs && node test-limiter.mjs && node test-visibility.mjs",
+    "pack": "node build.mjs --pack"
+  }
+}
+
+

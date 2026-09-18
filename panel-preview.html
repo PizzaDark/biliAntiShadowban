@@ -1,0 +1,295 @@
+
+
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>B站评论防和谐 v1.5.0 预览</title>
+<style>
+body{font:14px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f6f7f8;margin:0;padding:24px;color:#18191c}
+h2{font-size:15px;margin:26px 0 10px;padding-left:8px;border-left:3px solid #00aeec}
+.wrap{max-width:1000px;margin:0 auto}
+.cols{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.card{background:#fff;border:1px solid #e3e5e7;border-radius:8px;padding:16px;flex:1;min-width:380px}
+.cmt{border-bottom:1px solid #f1f2f3;padding:10px 0;overflow:hidden}
+.cmt .u{color:#00aeec;font-size:12px}
+.cmt .t{margin-top:2px}
+.popup-frame{width:320px;border:1px solid #e3e5e7;border-radius:8px;overflow:hidden;background:#fff}
+.note{color:#61666d;font-size:12px;margin:4px 0 0}
+.sendbar{display:flex;align-items:center;gap:8px;justify-content:flex-end;border-top:1px solid #f1f2f3;padding-top:10px;margin-top:10px}
+.fakesend{background:#00aeec;color:#fff;border:0;border-radius:6px;padding:6px 18px;font-size:13px;cursor:pointer;width:auto;height:auto;margin:0}
+/* 所有类名统一 bsc- 前缀，避免与B站或其他扩展冲突 */
+.bsc-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 30px; padding: 0 12px; margin-right: 8px;
+  border: 1px solid #00aeec; border-radius: 6px;
+  background: #fff; color: #00aeec;
+  font-size: 13px; line-height: 1; cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+  transition: background .15s, color .15s;
+  vertical-align: middle;
+}
+.bsc-btn:hover { background: #e3f6fd; }
+.bsc-btn[data-state="checking"] { opacity: .7; cursor: progress; }
+.bsc-btn[data-state="high"] { border-color: #ff5c5c; color: #fff; background: #ff5c5c; }
+.bsc-btn[data-state="mid"] { border-color: #ff9a2e; color: #fff; background: #ff9a2e; }
+.bsc-btn[data-state="safe"] { border-color: #37c25a; color: #fff; background: #37c25a; }
+.bsc-btn-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.bsc-panel {
+  position: absolute; z-index: 2147483000;
+  width: 360px; max-height: 420px; overflow: auto;
+  background: #fff; border: 1px solid #e3e5e7; border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.14);
+  font-size: 13px; color: #18191c; line-height: 1.6;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.bsc-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-bottom: 1px solid #f1f2f3; font-weight: 600;
+}
+.bsc-panel-close { cursor: pointer; color: #9499a0; font-size: 16px; line-height: 1; }
+.bsc-panel-body { padding: 10px 12px; }
+.bsc-verdict { padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; }
+.bsc-verdict[data-level="high"] { background: #ffecec; color: #c62828; }
+.bsc-verdict[data-level="mid"]  { background: #fff5e6; color: #b26a00; }
+.bsc-verdict[data-level="low"]  { background: #f4f7ff; color: #3a5bbf; }
+.bsc-verdict[data-level="safe"] { background: #eaf9ee; color: #1f7a3d; }
+
+.bsc-preview {
+  padding: 8px 10px; background: #f6f7f8; border-radius: 6px;
+  margin-bottom: 10px; word-break: break-all; white-space: pre-wrap;
+}
+.bsc-hl { background: #ffd6d6; border-bottom: 2px solid #ff5c5c; border-radius: 2px; }
+.bsc-hl[data-level="mid"] { background: #ffe9c9; border-bottom-color: #ff9a2e; }
+.bsc-hl[data-level="low"] { background: #e2e9ff; border-bottom-color: #6b8cff; }
+
+.bsc-item { padding: 8px 0; border-top: 1px dashed #eee; }
+.bsc-item:first-child { border-top: none; }
+.bsc-item-title { font-weight: 600; }
+.bsc-tag {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  font-size: 11px; margin-right: 6px; color: #fff;
+}
+.bsc-tag[data-level="high"] { background: #ff5c5c; }
+.bsc-tag[data-level="mid"]  { background: #ff9a2e; }
+.bsc-tag[data-level="low"]  { background: #6b8cff; }
+.bsc-pos { color: #9499a0; font-size: 12px; }
+.bsc-advice { color: #61666d; }
+.bsc-actions { display: flex; gap: 8px; margin-top: 10px; }
+.bsc-mini {
+  flex: 1; height: 30px; border-radius: 6px; border: 1px solid #e3e5e7;
+  background: #fff; cursor: pointer; font-size: 12px;
+}
+.bsc-mini:hover { background: #f6f7f8; }
+.bsc-foot {
+  padding: 8px 12px; border-top: 1px solid #f1f2f3;
+  color: #9499a0; font-size: 11px;
+}
+.bsc-foot a { color: #00aeec; text-decoration: none; }
+
+/* 已发评论可见性徽标：渲染在评论右侧 */
+.bsc-has-badge { position: relative; }
+.bsc-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  float: right; margin-left: 10px;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; line-height: 1.5; white-space: nowrap;
+  vertical-align: middle; cursor: default; user-select: none;
+}
+.bsc-badge[data-v="visible"]   { background: #eaf9ee; color: #1f7a3d; }
+.bsc-badge[data-v="self_only"] { background: #ffecec; color: #c62828; font-weight: 600; }
+.bsc-badge[data-v="folded"]    { background: #fff5e6; color: #b26a00; }
+.bsc-badge[data-v="unknown"]   { background: #f1f2f3; color: #9499a0; }
+.bsc-badge[data-v="checking"]  { background: #f1f2f3; color: #9499a0; }
+.bsc-badge[data-v="idle"]      { background: transparent; color: #c9ccd0; }
+
+@media (prefers-color-scheme: dark) {
+  .bsc-panel { background: #1c1f23; color: #e3e5e7; border-color: #2f3238; }
+  .bsc-preview { background: #26292e; }
+  .bsc-mini { background: #26292e; color: #e3e5e7; border-color: #2f3238; }
+  .bsc-btn { background: #1c1f23; }
+  .bsc-badge[data-v="unknown"], .bsc-badge[data-v="checking"] { background: #26292e; color: #9499a0; }
+  .bsc-badge[data-v="idle"] { color: #4a4e55; }
+}
+
+/* ---- 和谐处理区 ---- */
+.bsc-sub {
+  font-weight: 600; font-size: 12px; margin: 12px 0 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.bsc-help {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #9499a0; color: #fff; font-size: 10px; cursor: help; font-weight: 400;
+}
+.bsc-harm { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f2f3; }
+.bsc-modes { display: flex; gap: 12px; margin-bottom: 8px; font-size: 12px; }
+.bsc-modes label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.bsc-harm-out { min-height: 20px; }
+.bsc-zw {
+  display: inline-block; font-style: normal; color: #00aeec;
+  background: #e3f6fd; border-radius: 2px; margin: 0 1px; font-size: 11px;
+}
+.bsc-harm-note { font-size: 11px; color: #61666d; margin-top: 6px; line-height: 1.5; }
+.bsc-risk {
+  margin-top: 8px; padding: 6px 8px; border-radius: 5px;
+  background: #fff5e6; color: #b26a00; font-size: 11px; line-height: 1.5;
+}
+.bsc-mini.bsc-primary { border-color: #00aeec; color: #00aeec; }
+.bsc-mini.bsc-primary:hover { background: #e3f6fd; }
+@media (prefers-color-scheme: dark) {
+  .bsc-harm { border-top-color: #2f3238; }
+  .bsc-zw { background: #05384a; }
+  .bsc-risk { background: #33280f; color: #e0b050; }
+}
+
+/* ---- 官方检测 vs 本地推测 的视觉区分 ---- */
+.bsc-section-tag {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600; padding: 3px 8px;
+  border-radius: 4px; margin-bottom: 8px; width: fit-content;
+}
+.bsc-section-tag.bsc-guess { background: #f1f2f3; color: #61666d; }
+.bsc-section-tag.bsc-real  { background: #e3f6fd; color: #0079b3; }
+.bsc-official { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f2f3; }
+.bsc-probe-area { font-size: 11px; color: #9499a0; margin-bottom: 6px; }
+.bsc-probe-out {
+  padding: 8px 10px; border-radius: 6px; background: #f6f7f8;
+  font-size: 12px; color: #61666d; line-height: 1.6;
+}
+.bsc-probe-out.bsc-probe-good { background: #eaf9ee; color: #1f7a3d; }
+.bsc-probe-out.bsc-probe-bad  { background: #ffecec; color: #c62828; }
+.bsc-probe-out.bsc-probe-warn { background: #fff5e6; color: #b26a00; }
+.bsc-probe-out.bsc-probe-err  { background: #ffecec; color: #c62828; }
+.bsc-probe-title { font-weight: 600; font-size: 13px; }
+.bsc-code { margin-top: 4px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; }
+.bsc-probe-detail { margin-top: 4px; }
+.bsc-probe-note { margin-top: 4px; font-size: 11px; opacity: .75; }
+@media (prefers-color-scheme: dark) {
+  .bsc-section-tag.bsc-guess { background: #26292e; color: #9499a0; }
+  .bsc-section-tag.bsc-real  { background: #05384a; color: #4fc3f7; }
+  .bsc-official { border-top-color: #2f3238; }
+  .bsc-probe-out { background: #26292e; }
+}
+
+/* ---- 发送后官方判定浮层 ---- */
+.bsc-toast {
+  position: fixed; right: 20px; bottom: 20px; z-index: 2147483600;
+  width: 320px; padding: 12px 14px; border-radius: 10px;
+  background: #fff; border: 1px solid #e3e5e7;
+  box-shadow: 0 8px 28px rgba(0,0,0,.16);
+  font: 13px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #18191c; animation: bsc-in .18s ease-out;
+}
+@keyframes bsc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.bsc-toast-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.bsc-toast-close { cursor: pointer; color: #9499a0; font-size: 14px; line-height: 1; }
+.bsc-toast-good { border-left: 4px solid #37c25a; }
+.bsc-toast-bad  { border-left: 4px solid #ff5c5c; }
+.bsc-toast-warn { border-left: 4px solid #ff9a2e; }
+@media (prefers-color-scheme: dark) {
+  .bsc-toast { background: #1c1f23; color: #e3e5e7; border-color: #2f3238; }
+}
+
+
+  body { width: 320px; margin: 0; font: 13px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #18191c; }
+  header { padding: 12px; background: #00aeec; color: #fff; font-weight: 600; }
+  .sec { padding: 10px 12px; border-bottom: 1px solid #f1f2f3; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+  .muted { color: #9499a0; font-size: 12px; }
+  .pill { padding: 1px 8px; border-radius: 10px; font-size: 11px; background: #f1f2f3; }
+  .pill.ok { background: #eaf9ee; color: #1f7a3d; }
+  .pill.warn { background: #ffecec; color: #c62828; }
+  a { color: #00aeec; text-decoration: none; }
+  button { width: 100%; height: 30px; margin-top: 6px; border: 1px solid #e3e5e7; background: #fff; border-radius: 6px; cursor: pointer; }
+  input[type=checkbox] { width: 16px; height: 16px; }
+  /* 速率额度说明 */
+  .quota-box { background: #f6f7f8; border-radius: 6px; padding: 8px 10px; margin-top: 4px; }
+  .quota-top { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .quota-bar { height: 5px; background: #e3e5e7; border-radius: 3px; margin: 6px 0 5px; overflow: hidden; }
+  .quota-fill { height: 100%; background: #00aeec; border-radius: 3px; transition: width .3s; }
+  .quota-note { font-size: 11px; color: #61666d; line-height: 1.5; }
+  .free-tag { display:inline-block; background:#eaf9ee; color:#1f7a3d; border-radius:3px; padding:0 4px; font-size:10px; margin-right:4px; }
+
+.popup-frame body{width:auto}
+</style></head><body><div class="wrap">
+<h1 style="font-size:19px">B站评论防和谐 v1.5.0 · 界面预览</h1>
+<p class="note">此页仅为样式预览，非真实B站页面。</p>
+
+<h2>① 评论区：手动「敏感性检测」按钮（位于发布左侧）</h2>
+<div class="card">
+  <div style="border:1px solid #e3e5e7;border-radius:6px;padding:10px;color:#9499a0">发一条友善的评论吧~</div>
+  <div class="sendbar">
+    <button class="bsc-btn" style="width:auto;height:auto;margin:0;padding:6px 14px;border:1px solid #e3e5e7;border-radius:6px;background:#fff;cursor:pointer">敏感性检测</button>
+    <button class="fakesend">发布</button>
+  </div>
+  <p class="note">仅在你点击时才检测，不会在每次发送时自动触发。</p>
+</div>
+
+<h2>② 我的历史评论：右侧可见性徽标（滚动到可见时才检测）</h2>
+<div class="card">
+  <div class="cmt"><span class="bsc-badge" data-v="visible">● 他人可见</span><div class="u">依然匹萨吧</div><div class="t">这个视频讲得太清楚了，收藏了。</div></div>
+  <div class="cmt"><span class="bsc-badge" data-v="self_only">● 仅自己可见</span><div class="u">依然匹萨吧</div><div class="t">（一条被屏蔽的评论示例）</div></div>
+  <div class="cmt"><span class="bsc-badge" data-v="folded">● 已折叠</span><div class="u">依然匹萨吧</div><div class="t">（一条被折叠的评论示例）</div></div>
+  <div class="cmt"><span class="bsc-badge" data-v="checking">◌ 检测中…</span><div class="u">依然匹萨吧</div><div class="t">（正在核验）</div></div>
+  <div class="cmt"><span class="bsc-badge" data-v="idle">· 待检测</span><div class="u">依然匹萨吧</div><div class="t">（尚未滚动到此处，不发起任何请求）</div></div>
+  <p class="note">未进入视口的评论保持「待检测」，零请求；滚动到才逐条检测。</p>
+</div>
+
+<h2>③ 弹窗：请求额度（免费 · 自动恢复）</h2>
+<div class="cols">
+<div class="popup-frame">
+  <header>B站评论防和谐</header>
+
+  <div class="sec">
+    <div class="row"><span>登录状态</span><span class="pill" id="login">检测中…</span></div>
+
+    <div class="quota-box">
+      <div class="quota-top">
+        <span>请求额度</span>
+        <span id="quotaNum" class="muted">—</span>
+      </div>
+      <div class="quota-bar"><div class="quota-fill" id="quotaFill" style="width:0%"></div></div>
+      <div class="quota-note" id="quotaNote">
+        <span class="free-tag">免费</span>用完会自动恢复，无总量上限。
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:6px"><span>排队中</span><span class="pill" id="queue">-</span></div>
+    <div class="row"><span>风控保护</span><span class="pill" id="breaker">-</span></div>
+  </div>
+
+  <div class="sec">
+    <div class="row"><label for="vis">可见性检测</label><input type="checkbox" id="vis"></div>
+    <div class="row"><label for="img">图片风险检测</label><input type="checkbox" id="img"></div>
+    <div class="row"><label for="verify">官方判定核验</label><input type="checkbox" id="verify"></div>
+    <div class="row"><label for="harm">和谐处理</label><input type="checkbox" id="harm"></div>
+    <div class="muted" id="harmHint">图片仅在本机分析，不会上传。</div>
+  </div>
+
+  <div class="sec" id="err" style="display:none;background:#ffecec;color:#c62828;font-size:12px"></div>
+
+  <div class="sec">
+    <button id="opts">打开设置与法律声明</button>
+  </div>
+
+  <div class="sec muted">
+    插件作者 <a href="https://space.bilibili.com/6297797" target="_blank" rel="noopener noreferrer">@依然匹萨吧</a><br>
+    非官方工具，与哔哩哔哩无隶属关系。检测结果仅供参考。
+  </div>
+
+  
+</div>
+<div class="card" style="min-width:300px">
+  <b style="font-size:13px">措辞调整</b>
+  <p class="note">「令牌」→「<b>请求额度</b>」，并在弹窗显眼处标注<b>免费</b>标签、进度条与恢复时间，避免被误解为收费额度。</p>
+  <p class="note">未满额时文案示例：<br>「当前 3/5，约每 5 秒恢复 1 次，10 秒后回满。这不是付费额度。」</p>
+  <b style="font-size:13px">官方核验浮层</b>
+  <div class="bsc-toast bsc-toast-good" style="position:static;margin-top:8px">
+    <div class="bsc-toast-head"><b>他人可见</b><span class="bsc-toast-close">✕</span></div>
+    <div>以游客身份可查询到这条评论，显示正常。</div>
+    <div style="margin-top:6px;color:#9499a0;font-size:11px;">官方判定核验 · 零写入，未额外发送任何评论</div>
+  </div>
+</div>
+</div>
+</div></body></html>
+
+

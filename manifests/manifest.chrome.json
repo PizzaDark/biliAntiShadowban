@@ -1,0 +1,90 @@
+
+
+{
+  "manifest_version": 3,
+  "name": "B站评论防和谐 · 官方判定核验与可见性标识",
+  "short_name": "B站评论防和谐",
+  "version": "1.5.0",
+  "description": "被动核验B站官方对你评论的真实判定：零写入、不代发任何评论，读取官方返回码(如12016)与登录/游客可见性差异，标识评论是否被ShadowBan；另含本地敏感词预判(标注为推测)与和谐处理。非官方工具，作者@依然匹萨吧。",
+  "author": "依然匹萨吧",
+  "homepage_url": "https://space.bilibili.com/6297797",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "bg.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "src/ui/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/ui/options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.bilibili.com/*",
+    "https://api.bilibili.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*",
+        "https://www.bilibili.com/bangumi/play/*",
+        "https://www.bilibili.com/opus/*",
+        "https://www.bilibili.com/read/cv*",
+        "https://t.bilibili.com/*",
+        "https://space.bilibili.com/*"
+      ],
+      "js": [
+        "intercept.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*",
+        "https://www.bilibili.com/bangumi/play/*",
+        "https://www.bilibili.com/opus/*",
+        "https://www.bilibili.com/read/cv*",
+        "https://t.bilibili.com/*",
+        "https://space.bilibili.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "src/content/panel.css"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "rules/rules.json",
+        "rules/homophones.json",
+        "src/content/panel.css",
+        "intercept.js"
+      ],
+      "matches": [
+        "https://*.bilibili.com/*"
+      ]
+    }
+  ]
+}
+
+
